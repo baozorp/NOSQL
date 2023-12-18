@@ -9,6 +9,7 @@ class Room(BaseModel):
     bedrooms: int
     accommodates: int
     price: str
+    picture_url: str
 
 
 class UpdateRoomModel(BaseModel):
@@ -18,3 +19,4 @@ class UpdateRoomModel(BaseModel):
     bedrooms: int
     accommodates: int
     price: str
+    picture_url: str

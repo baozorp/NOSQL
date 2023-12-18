@@ -3,13 +3,14 @@ import json
 
 
 def set_rooms():
-    with open('rooms.json') as rooms_json:
+    with open('hosts.json') as rooms_json:
         rooms = json.load(rooms_json)
 
     # Разбиение списка на подсписки по 1000 элементов
-    step = 1000
+    step = 2000
 
     rooms = [rooms[i:i+step] for i in range(0, len(rooms), step)]
+    # print(rooms[0][0])
     for i in rooms:
         requests.post(
             'http://localhost:8005/api/rooms/set_many', json=i)
@@ -32,5 +33,9 @@ def get_all():
         'http://127.0.0.1:8005/api/rooms/').json()
 
 
-# set_rooms()
-print(len(get_by_description()))
+def clear_all():
+    return requests.get(
+        f"http://127.0.0.1:8005/api/rooms/clear_collection?collection_name=rooms").json()
+
+
+set_rooms()

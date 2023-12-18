@@ -1,12 +1,12 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends
 
-from repository.repository import Repository
+# from repository.repository import Repository
 
 
-router = APIRouter()
+routersa = APIRouter()
 
 
-@router.get("/")
+@routersa.get("/")
 async def get_all_hosts() -> list[str]:
     return ["Hello,", "world!"]

@@ -1,13 +1,8 @@
-import os
-
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 
-from utils.elasticsearch_utils import get_elasticsearch_client
-from models.room import Room, UpdateRoomModel
 
-
-class SearchStudentRepository:
+class ElsaticSearch:
     _elasticsearch_client: AsyncElasticsearch
     _elasticsearch_index: str
 
@@ -15,10 +10,21 @@ class SearchStudentRepository:
         self._elasticsearch_client = elasticsearch_client
         self._elasticsearch_index = index
 
-    async def create(self, student_id: str, student: UpdateRoomModel):
+    async def clear_collection(self, name_of_index):
+        name_of_index = self._elasticsearch_index
+        try:
+            await self._elasticsearch_client.indices.delete(index=name_of_index)
+            await self._elasticsearch_client.indices.create(index=name_of_index)
+        except Exception as e:
+            print(f"Unsuccesfull clear: {e}")
+            return "Unsuccess"
+        else:
+            return "Success"
+
+    async def create(self, student_id: str, student):
         await self._elasticsearch_client.create(index=self._elasticsearch_index, id=student_id, document=dict(student))
 
-    async def update(self, student_id: str, student: UpdateRoomModel):
+    async def update(self, student_id: str, student):
         await self._elasticsearch_client.update(index=self._elasticsearch_index, id=student_id, doc=dict(student))
 
     async def delete(self, student_id: str):
@@ -64,8 +70,3 @@ class SearchStudentRepository:
         #                  ),
         #                  result))
         return result_list
-
-    @staticmethod
-    def get_instance(elasticsearch_client: AsyncElasticsearch = Depends(get_elasticsearch_client)):
-        elasticsearch_index: str = str(os.getenv('ELASTICSEARCH_INDEX'))
-        return SearchStudentRepository(elasticsearch_index, elasticsearch_client)

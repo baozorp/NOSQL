@@ -1,22 +1,21 @@
 import os
 from typing import Any
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
 from models.room import Room
 from motor.core import AgnosticCollection
 import pymongo
+
 db_client: AsyncIOMotorClient
 
 
 class MongoDBManager:
 
     @staticmethod
-    async def get_db_collection() -> AsyncIOMotorCollection:
+    async def get_db() -> AsyncIOMotorDatabase:
+        global db_client
         mongo_db_name: str = str(os.getenv('MONGO_DB'))
-        collection_name: str = str(os.getenv('MONGO_COLLECTION'))
-        mongo_collection = AsyncIOMotorCollection(
-            db_client.get_database(mongo_db_name), name=collection_name)
-        return mongo_collection
+        return AsyncIOMotorDatabase(db_client, name=mongo_db_name)
 
     @staticmethod
     async def init_mongo_client(mongo_url: str = str(os.getenv('MONGO_URL')),
@@ -31,9 +30,8 @@ class MongoDBManager:
             await db_client.server_info()
             print(f'Connected to mongo with uri {mongo_url}')
             if mongo_db not in await db_client.list_database_names():
-                data_base = await db_client.get_database(mongo_db)
-                await db_client.get_database(
-                    mongo_db).create_collection(mongo_collection)
+                db_client.get_database(mongo_db)
+
                 print(f'Database {mongo_db} created')
 
         except Exception as ex:
@@ -60,5 +58,6 @@ class MongoDBManager:
             description=room_data['description'],
             bedrooms=room_data['bedrooms'],
             accommodates=room_data['accommodates'],
-            price=room_data['price']
+            price=room_data['price'],
+            picture_url=room_data['picture_url']
         )

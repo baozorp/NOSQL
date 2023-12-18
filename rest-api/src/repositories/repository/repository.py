@@ -1,29 +1,41 @@
 from fastapi import Depends
-from motor.motor_asyncio import AsyncIOMotorCollection
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 from typing import List
 
 from utils.mongo_manager import MongoDBManager
 from models.room import Room, UpdateRoomModel
 
 
-class Repository:
+class MongoDB:
+
+    _db: AsyncIOMotorDatabase
     _db_collection: AsyncIOMotorCollection
 
-    def __init__(self, db_collection: AsyncIOMotorCollection):
-        self._db_collection = db_collection
+    def __init__(self, db: AsyncIOMotorDatabase, db_collection: AsyncIOMotorCollection):
+        self._db: AsyncIOMotorDatabase = db
+        self._db_collection: AsyncIOMotorCollection = db_collection
 
-    async def create(self, student: UpdateRoomModel) -> str:
+    async def drop_collection(self):
+        collection_name: str = str(self._db_collection.name)
+        try:
+            await self._db.drop_collection(collection_name)
+            await self._db.create_collection(collection_name)
+        except Exception as e:
+            print(f"Unsuccesfull drop: {e}")
+            return "Unsuccess"
+        return "Success"
+
+    async def create(self, student) -> str:
         insert_result = await self._db_collection.insert_one(dict(student))
         return str(insert_result.inserted_id)
 
-    async def create_many(self, rooms: List[UpdateRoomModel]) -> list[str]:
+    async def create_many(self, rooms: List) -> list[str]:
         rooms_dict = [dict(room) for room in rooms]
-
         insert_result = await self._db_collection.insert_many(rooms_dict)
         mapped_to_str_ids = list(map(str, insert_result.inserted_ids))
         return mapped_to_str_ids
 
-    async def get_all(self) -> list[Room]:
+    async def get_all(self) -> list:
         db_students = []
         async for student in self._db_collection.find():
             db_students.append(MongoDBManager.map_room(student))
@@ -41,7 +53,3 @@ class Repository:
     async def delete(self, student_id: str) -> Room | None:
         db_student = await self._db_collection.find_one_and_delete(MongoDBManager.get_filter(student_id))
         return MongoDBManager.map_room(db_student)
-
-    @staticmethod
-    def get_instance(db_collection: AsyncIOMotorCollection = Depends(MongoDBManager.get_db_collection)):
-        return Repository(db_collection)
