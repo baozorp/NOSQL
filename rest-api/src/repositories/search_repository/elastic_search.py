@@ -1,5 +1,7 @@
+from typing import List, Mapping, Any
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
+from pydantic import BaseModel
 
 
 class ElsaticSearch:
@@ -21,8 +23,20 @@ class ElsaticSearch:
         else:
             return "Success"
 
-    async def create(self, student_id: str, student):
+    async def create(self, student_id: str, student: BaseModel):
         await self._elasticsearch_client.create(index=self._elasticsearch_index, id=student_id, document=dict(student))
+
+    async def create_many(self, objects_ids: list[str], objects):
+
+        bulk = []
+
+        for i in range(len(objects)):
+            # Добавляем операцию index для каждого объекта
+            index_operation = {
+                'index': {'_index': self._elasticsearch_index, '_id': objects_ids[i]}}
+            bulk.append(index_operation)
+            bulk.append(objects[i])
+        print(await self._elasticsearch_client.bulk(operations=bulk[:20]))
 
     async def update(self, student_id: str, student):
         await self._elasticsearch_client.update(index=self._elasticsearch_index, id=student_id, doc=dict(student))
@@ -49,9 +63,9 @@ class ElsaticSearch:
         result_list = []
         scroll = "1m"
         response = await self._elasticsearch_client.search(index=self._elasticsearch_index, query=query, scroll=scroll)
+        print(response)
         if 'hits' not in response.body:
             return []
-        print(response['hits']['total']['value'])
         value_of_matches = int(response['hits']['total']['value']/10) + 1
         scroll_id = response['_scroll_id']
         for _ in range(value_of_matches):

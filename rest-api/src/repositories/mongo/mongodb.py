@@ -6,7 +6,7 @@ from utils.mongo_manager import MongoDBManager
 from models.room import Room, UpdateRoomModel
 
 
-class MongoDB:
+class MongoDBCollection:
 
     _db: AsyncIOMotorDatabase
     _db_collection: AsyncIOMotorCollection
