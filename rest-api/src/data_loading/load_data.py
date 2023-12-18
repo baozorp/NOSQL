@@ -1,6 +1,6 @@
 import json
 import requests
-from repositories.repository.collections.rooms_collection import MongoRoomCollection
+from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.search_repository.collections.rooms_collection import ElsaticRoomsCollection
 import asyncio
 
