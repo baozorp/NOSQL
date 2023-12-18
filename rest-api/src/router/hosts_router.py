@@ -7,7 +7,7 @@ from pymemcache import HashClient
 from starlette.responses import Response
 import asyncio
 from utils.memcached_utils import MemcachedManager
-from repositories.repository.collections.rooms_collection import MongoRoomCollection
+from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.search_repository.collections.rooms_collection import ElsaticRoomsCollection
 from models.room import Room, UpdateRoomModel
 
@@ -33,7 +33,6 @@ async def drop_collection_by_name(
     print(collection_name)
     a = await repository.drop_collection()
     b = await search_repository.clear_collection(name_of_index=collection_name)
-    print(a, b)
     return "Succesfully cleared"
 
 

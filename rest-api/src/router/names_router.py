@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends
 # from repository.repository import Repository
 
 
-routersa = APIRouter()
+router = APIRouter()
 
 
-@routersa.get("/")
+@router.get("/")
 async def get_all_hosts() -> list[str]:
     return ["Hello,", "world!"]
