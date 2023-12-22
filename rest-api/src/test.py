@@ -12,7 +12,7 @@ def set_users():
         f'http://127.0.0.1:8005/api/data_loader/load_users').json()
 
 
-def get_by_description():
+def get__room_by_description():
     string = 'sea'
     return requests.get(
         f'http://127.0.0.1:8005/api/rooms/filter?name={string}').json()
@@ -38,4 +38,5 @@ def clear_all():
 #     a = json.load(jsons)
 #     print(len(a))
 # print(clear_all())
-print(set_users())
+# print(set_rooms())
+print(len(get_by_description()))

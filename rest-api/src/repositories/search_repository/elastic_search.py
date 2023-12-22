@@ -36,7 +36,9 @@ class ElsaticSearch:
                 'index': {'_index': self._elasticsearch_index, '_id': objects_ids[i]}}
             bulk.append(index_operation)
             bulk.append(objects[i])
-        print(await self._elasticsearch_client.bulk(operations=bulk[:20]))
+        chunks = [bulk[i:i + 5000] for i in range(0, len(bulk), 5000)]
+        for chunk in chunks:
+            await self._elasticsearch_client.bulk(operations=chunk)
 
     async def update(self, student_id: str, student):
         await self._elasticsearch_client.update(index=self._elasticsearch_index, id=student_id, doc=dict(student))
@@ -63,7 +65,6 @@ class ElsaticSearch:
         result_list = []
         scroll = "1m"
         response = await self._elasticsearch_client.search(index=self._elasticsearch_index, query=query, scroll=scroll)
-        print(response)
         if 'hits' not in response.body:
             return []
         value_of_matches = int(response['hits']['total']['value']/10) + 1

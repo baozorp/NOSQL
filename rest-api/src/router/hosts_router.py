@@ -66,18 +66,6 @@ async def add_room(room: UpdateRoomModel,
     return room_id
 
 
-@router.post("/set_many")
-async def add_many_rooms(rooms: List[UpdateRoomModel],
-                         repository: MongoRoomCollection = Depends(
-                             MongoRoomCollection.get_instance),
-                         search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> str:
-    rooms_ids = await repository.create_many(rooms)
-    elastic_tasks = [search_repository.create(
-        rooms_ids[i], rooms[i]) for i in range(len(rooms_ids))]
-    await asyncio.gather(*elastic_tasks)
-    return 'room_id'
-
-
 @router.delete("/{student_id}")
 async def remove_student(student_id: str,
                          repository: MongoRoomCollection = Depends(

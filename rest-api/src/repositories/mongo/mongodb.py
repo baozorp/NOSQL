@@ -33,6 +33,7 @@ class MongoDBCollection:
         rooms_dict = [dict(room) for room in rooms]
         insert_result = await self._db_collection.insert_many(rooms_dict)
         mapped_to_str_ids = list(map(str, insert_result.inserted_ids))
+        print(mapped_to_str_ids)
         return mapped_to_str_ids
 
     async def get_all(self) -> list:
