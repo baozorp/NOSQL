@@ -1,4 +1,4 @@
-from typing import Any, List, Sequence
+from typing import Any, Sequence
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
 from pymemcache import HashClient
@@ -31,12 +31,11 @@ async def filter_by_location(host_location: str, repository: ElasticSearch = Dep
 
 @router.get("/clear_collection")
 async def drop_collection_by_name(
-        collection_name: str,
         repository: MongoDBCollection = Depends(
             MongoRoomCollection.get_instance),
         search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
     await repository.clear_collection()
-    await search_repository.clear_collection(name_of_index=collection_name)
+    await search_repository.clear_collection()
     return "Succesfully cleared"
 
 
@@ -48,7 +47,6 @@ async def get_by_id(obj_id: str,
     if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     obj = memcached_client.get(obj_id)
-
     if obj is not None:
         return obj
     obj = await repository.get_by_id(obj_id)

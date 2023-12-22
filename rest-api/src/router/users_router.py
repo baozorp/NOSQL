@@ -26,7 +26,7 @@ async def drop_collection_by_name(
         search_repository: ElasticSearch = Depends(ElasticUsersCollection.get_instance)) -> Any:
     print(collection_name)
     await repository.clear_collection()
-    await search_repository.clear_collection(name_of_index=collection_name)
+    await search_repository.clear_collection()
 
 
 @router.post("/")

@@ -1,10 +1,8 @@
 import os
 from typing import Any
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from models.room import Room
-from motor.core import AgnosticCollection
-import pymongo
 
 db_client: AsyncIOMotorClient
 
@@ -12,27 +10,24 @@ db_client: AsyncIOMotorClient
 class MongoDBManager:
 
     @staticmethod
-    async def get_db() -> AsyncIOMotorDatabase:
-        global db_client
-        mongo_db_name: str = str(os.getenv('MONGO_DB'))
-        return AsyncIOMotorDatabase(db_client, name=mongo_db_name)
-
-    @staticmethod
     async def init_mongo_client(mongo_url: str = str(os.getenv('MONGO_URL')),
                                 mongo_db: str = str(os.getenv('MONGO_DB'))):
         global db_client
         try:
-            print(os.getenv('MONGO_URL'))
             db_client = AsyncIOMotorClient(mongo_url)
             await db_client.server_info()
             print(f'Connected to mongo with uri {mongo_url}')
             if mongo_db not in await db_client.list_database_names():
                 db_client.get_database(mongo_db)
-
                 print(f'Database {mongo_db} created')
-
         except Exception as ex:
             print(f'Cant connect to mongo: {ex}')
+
+    @staticmethod
+    async def get_db() -> AsyncIOMotorDatabase:
+        global db_client
+        mongo_db_name: str = str(os.getenv('MONGO_DB'))
+        return AsyncIOMotorDatabase(db_client, name=mongo_db_name)
 
     @staticmethod
     def close_connection():

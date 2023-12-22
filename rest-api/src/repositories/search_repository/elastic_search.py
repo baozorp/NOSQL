@@ -1,5 +1,3 @@
-import string
-from typing import List, Mapping, Any
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from pydantic import BaseModel
@@ -13,11 +11,10 @@ class ElasticSearch:
         self._elasticsearch_client = elasticsearch_client
         self._elasticsearch_index = index
 
-    async def clear_collection(self, name_of_index):
-        name_of_index = self._elasticsearch_index
+    async def clear_collection(self):
         try:
-            await self._elasticsearch_client.indices.delete(index=name_of_index)
-            await self._elasticsearch_client.indices.create(index=name_of_index)
+            await self._elasticsearch_client.indices.delete(index=self._elasticsearch_index)
+            await self._elasticsearch_client.indices.create(index=self._elasticsearch_index)
         except Exception as e:
             print(f"Unsuccesfull clear: {e}")
             return "Unsuccess"
@@ -28,20 +25,21 @@ class ElasticSearch:
         await self._elasticsearch_client.create(index=self._elasticsearch_index, id=obj_id, document=dict(obj))
 
     async def create_many(self, objects_ids: list[str], objects):
+        print(self._elasticsearch_index)
         bulk = []
         for i in range(len(objects)):
-            # Добавляем операцию index для каждого объекта
             index_operation = {
                 'index': {'_index': self._elasticsearch_index, '_id': objects_ids[i]}}
             bulk.append(index_operation)
             bulk.append(objects[i])
+
         chunk_size = 1000
         chunks = [bulk[i:i + chunk_size]
                   for i in range(0, len(bulk), chunk_size)]
-        for chunk in chunks:
-            await self._elasticsearch_client.bulk(operations=chunk)
-            print(f"Chunk of added")
-        print("Added to elastic")
+        for i in range(len(chunks)):
+            await self._elasticsearch_client.bulk(operations=chunks[i], timeout="60s")
+        #     print(f"Chunk {i} of added")
+        # print("Added to elastic")
 
     async def update(self, obj_id: str, obj):
         await self._elasticsearch_client.update(index=self._elasticsearch_index, id=obj_id, doc=dict(obj))
@@ -54,16 +52,10 @@ class ElasticSearch:
         if not index_exist:
             return []
         query = {
-            "bool": {
-                "must": [
-                    {
-                        "fuzzy": {
-                            atr: {
-                                "value": description
-                            }
-                        }
-                    }
-                ]
+            "fuzzy": {
+                atr: {
+                    "value": description
+                }
             }
         }
         result_list = []

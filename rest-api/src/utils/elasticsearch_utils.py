@@ -6,10 +6,6 @@ elasticsearch_client: AsyncElasticsearch
 
 
 class ElsaticSearchManager:
-    @staticmethod
-    def get_elasticsearch_client() -> AsyncElasticsearch:
-        global elasticsearch_client
-        return elasticsearch_client
 
     @staticmethod
     async def connect_and_init_elasticsearch():
@@ -21,6 +17,11 @@ class ElsaticSearchManager:
             print(f'Connected to elasticsearch with uri {elasticsearch_url}')
         except Exception as ex:
             print(f'Cant connect to elasticsearch: {ex}')
+
+    @staticmethod
+    def get_elasticsearch_client() -> AsyncElasticsearch:
+        global elasticsearch_client
+        return elasticsearch_client
 
     @staticmethod
     async def close_elasticsearch_connect():

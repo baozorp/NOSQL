@@ -31,8 +31,8 @@ class MongoDBCollection:
         insert_result = await self._db_collection.insert_one(dict(obj))
         return str(insert_result.inserted_id)
 
-    async def create_many(self, rooms: Sequence[BaseModel]) -> list[str]:
-        rooms_dict = [dict(room) for room in rooms]
+    async def create_many(self, objs: Sequence[BaseModel]) -> list[str]:
+        rooms_dict = [dict(obj) for obj in objs]
         insert_result = await self._db_collection.insert_many(rooms_dict)
         mapped_to_str_ids = list(map(str, insert_result.inserted_ids))
         return mapped_to_str_ids
