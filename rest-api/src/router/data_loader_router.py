@@ -5,7 +5,7 @@ from repositories.mongo.collections.users_collection import MongoUsersCollection
 from repositories.search_repository.collections.rooms_collection import ElasticRoomsCollection
 from repositories.search_repository.collections.users_collection import ElasticUsersCollection
 from repositories.mongo.mongodb import MongoDBCollection
-from repositories.search_repository.elastic_search import ElsaticSearch
+from repositories.search_repository.elastic_search import ElasticSearch
 from data_loading.load_data import DataLoader
 import os
 
@@ -46,7 +46,7 @@ async def load_rooms(
 async def load_users(
         rooms_repository: MongoDBCollection = Depends(
             MongoUsersCollection.get_instance),
-        rooms_search_repository: ElsaticSearch = Depends(
+        rooms_search_repository: ElasticSearch = Depends(
             ElasticUsersCollection.get_instance),
 ) -> str:
     file_name = os.getenv('USERS_COLLECTION')

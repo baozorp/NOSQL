@@ -1,7 +1,7 @@
 from typing import Any, List, Sequence
 
 from pydantic import BaseModel
-from repositories.search_repository.elastic_search import ElsaticSearch
+from repositories.search_repository.elastic_search import ElasticSearch
 from fastapi import APIRouter, Depends
 from repositories.mongo.collections.users_collection import MongoUsersCollection
 from repositories.mongo.mongodb import MongoDBCollection
@@ -23,7 +23,7 @@ async def drop_collection_by_name(
         collection_name: str,
         repository: MongoUsersCollection = Depends(
             MongoUsersCollection.get_instance),
-        search_repository: ElsaticSearch = Depends(ElasticUsersCollection.get_instance)) -> Any:
+        search_repository: ElasticSearch = Depends(ElasticUsersCollection.get_instance)) -> Any:
     print(collection_name)
     await repository.clear_collection()
     await search_repository.clear_collection(name_of_index=collection_name)

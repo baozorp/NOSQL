@@ -1,6 +1,4 @@
-from ast import Await
 from typing import Any, List, Sequence
-
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
 from pymemcache import HashClient
@@ -9,6 +7,7 @@ from repositories.mongo.mongodb import MongoDBCollection
 from utils.memcached_utils import MemcachedManager
 from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.search_repository.collections.rooms_collection import ElasticRoomsCollection
+from repositories.search_repository.elastic_search import ElasticSearch
 from models.room import Room, UpdateRoomModel
 
 router = APIRouter()
@@ -20,9 +19,14 @@ async def get_all_hosts(repository: MongoRoomCollection = Depends(MongoRoomColle
     return result
 
 
-@router.get("/filter")
-async def get_by_name(description: str, repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
-    return await repository.find_by_description(description)
+@router.get("/filter_by_description")
+async def filter_by_description(description: str, repository: ElasticSearch = Depends(ElasticRoomsCollection.get_instance)) -> Any:
+    return await repository.find_by_atr(Room, "description", description)
+
+
+@router.get("/filter_by_location")
+async def filter_by_location(host_location: str, repository: ElasticSearch = Depends(ElasticRoomsCollection.get_instance)) -> Any:
+    return await repository.find_by_atr(Room, "host_location", host_location)
 
 
 @router.get("/clear_collection")

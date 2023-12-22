@@ -9,14 +9,14 @@ from repositories.search_repository.collections.rooms_collection import ElasticR
 from repositories.mongo.collections.users_collection import MongoUsersCollection
 from repositories.search_repository.collections.users_collection import ElasticUsersCollection
 from repositories.mongo.mongodb import MongoDBCollection
-from repositories.search_repository.elastic_search import ElsaticSearch
+from repositories.search_repository.elastic_search import ElasticSearch
 import asyncio
 
 
 class DataLoader:
 
     @staticmethod
-    async def load_data(file_name, mongodb: MongoDBCollection,  elasticdb: ElsaticSearch):
+    async def load_data(file_name, mongodb: MongoDBCollection,  elasticdb: ElasticSearch):
         model: type[BaseModel]
         match file_name:
             case "rooms":

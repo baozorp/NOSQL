@@ -15,7 +15,12 @@ def set_users():
 
 def get_room_by_description(str):
     return requests.get(
-        f'http://127.0.0.1:8005/api/rooms/filter?description={str}').json()
+        f'http://127.0.0.1:8005/api/rooms/filter_by_description?description={str}').json()
+
+
+def get_room_by_location(str):
+    return requests.get(
+        f'http://127.0.0.1:8005/api/rooms/filter_by_location?host_location={str}').json()
 
 
 def get_by_id():
@@ -44,10 +49,6 @@ def clear_users():
         f"http://127.0.0.1:8005/api/users/clear_collection?collection_name=users").json()
 
 
-# with open('data_loading/rooms.json', 'r') as jsons:
-#     a = json.load(jsons)
-#     print(len(a))
-
 def set_data():
     print(clear_rooms())
     print(clear_users())
@@ -59,6 +60,7 @@ def set_data():
 # print(len(get_all_rooms()))
 # print(len(get_all_users()))
 print(len(get_room_by_description("Spain")))
+print(len(get_room_by_location("Spain")))
 # with open(f'data_loading/users.json', 'r') as rooms_json:
 #     rooms = json.load(rooms_json)
 # print(len(rooms))

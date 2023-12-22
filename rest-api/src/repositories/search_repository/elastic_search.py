@@ -1,10 +1,11 @@
+import string
 from typing import List, Mapping, Any
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from pydantic import BaseModel
 
 
-class ElsaticSearch:
+class ElasticSearch:
     _elasticsearch_client: AsyncElasticsearch
     _elasticsearch_index: str
 
@@ -39,7 +40,7 @@ class ElsaticSearch:
                   for i in range(0, len(bulk), chunk_size)]
         for chunk in chunks:
             await self._elasticsearch_client.bulk(operations=chunk)
-            print("Chunk added")
+            print(f"Chunk of added")
         print("Added to elastic")
 
     async def update(self, obj_id: str, obj):
@@ -48,9 +49,8 @@ class ElsaticSearch:
     async def delete(self, obj_id: str):
         await self._elasticsearch_client.delete(index=self._elasticsearch_index, id=obj_id)
 
-    async def find_by_name(self, name: str):
+    async def find_by_atr(self, model: type[BaseModel], atr: str, description: str):
         index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_index)
-
         if not index_exist:
             return []
         query = {
@@ -58,8 +58,8 @@ class ElsaticSearch:
                 "must": [
                     {
                         "fuzzy": {
-                            "description": {
-                                "value": name
+                            atr: {
+                                "value": description
                             }
                         }
                     }
@@ -75,17 +75,10 @@ class ElsaticSearch:
         scroll_id = response['_scroll_id']
         for _ in range(value_of_matches):
             hits = response.body['hits']['hits']
-            priv_result = [{
-                'id': hits[i]['_id'],
-                'description': hits[i]['_source']['description'],
-                'price': hits[i]['_source']['price'], } for i in range(len(hits))]
+            for hit in hits:
+                hit['_source']['id'] = hit['_id']
+            priv_result = [
+                model.model_validate(hit['_source']) for hit in hits]
             result_list += priv_result
             response = await self._elasticsearch_client.scroll(scroll='1m', scroll_id=scroll_id)
-
-        # rooms = list(map(lambda room:
-        #                  Room(
-        #                      id=room['_id'],
-        #                      description=room['_source']['description']
-        #                  ),
-        #                  result))
         return result_list
