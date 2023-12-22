@@ -23,8 +23,8 @@ class ElsaticSearch:
         else:
             return "Success"
 
-    async def create(self, student_id: str, student: BaseModel):
-        await self._elasticsearch_client.create(index=self._elasticsearch_index, id=student_id, document=dict(student))
+    async def create(self, obj_id: str, obj: BaseModel):
+        await self._elasticsearch_client.create(index=self._elasticsearch_index, id=obj_id, document=dict(obj))
 
     async def create_many(self, objects_ids: list[str], objects):
         bulk = []
@@ -34,15 +34,19 @@ class ElsaticSearch:
                 'index': {'_index': self._elasticsearch_index, '_id': objects_ids[i]}}
             bulk.append(index_operation)
             bulk.append(objects[i])
-        chunks = [bulk[i:i + 5000] for i in range(0, len(bulk), 5000)]
+        chunk_size = 1000
+        chunks = [bulk[i:i + chunk_size]
+                  for i in range(0, len(bulk), chunk_size)]
         for chunk in chunks:
             await self._elasticsearch_client.bulk(operations=chunk)
+            print("Chunk added")
+        print("Added to elastic")
 
-    async def update(self, student_id: str, student):
-        await self._elasticsearch_client.update(index=self._elasticsearch_index, id=student_id, doc=dict(student))
+    async def update(self, obj_id: str, obj):
+        await self._elasticsearch_client.update(index=self._elasticsearch_index, id=obj_id, doc=dict(obj))
 
-    async def delete(self, student_id: str):
-        await self._elasticsearch_client.delete(index=self._elasticsearch_index, id=student_id)
+    async def delete(self, obj_id: str):
+        await self._elasticsearch_client.delete(index=self._elasticsearch_index, id=obj_id)
 
     async def find_by_name(self, name: str):
         index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_index)
@@ -53,8 +57,10 @@ class ElsaticSearch:
             "bool": {
                 "must": [
                     {
-                        "match": {
-                            "description": name
+                        "fuzzy": {
+                            "description": {
+                                "value": name
+                            }
                         }
                     }
                 ]

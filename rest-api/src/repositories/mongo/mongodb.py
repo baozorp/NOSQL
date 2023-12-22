@@ -27,8 +27,8 @@ class MongoDBCollection:
             return "Unsuccess"
         return "Success"
 
-    async def create(self, student) -> str:
-        insert_result = await self._db_collection.insert_one(dict(student))
+    async def create(self, obj) -> str:
+        insert_result = await self._db_collection.insert_one(dict(obj))
         return str(insert_result.inserted_id)
 
     async def create_many(self, rooms: Sequence[BaseModel]) -> list[str]:
@@ -39,20 +39,20 @@ class MongoDBCollection:
 
     async def get_all(self, baseModel: Type[BaseModel]) -> Sequence[BaseModel]:
         db_objs: Sequence = []
-        async for student in self._db_collection.find():
-            student['id'] = str(student['_id'])
-            db_objs.append(baseModel.model_validate(student))
+        async for obj in self._db_collection.find():
+            obj['id'] = str(obj['_id'])
+            db_objs.append(baseModel.model_validate(obj))
         return db_objs
 
-    async def get_by_id(self, student_id: str) -> Room | None:
-        print(f'Get student {student_id} from mongo')
-        db_student = await self._db_collection.find_one(MongoDBManager.get_filter(student_id))
-        return MongoDBManager.map_room(db_student)
+    async def get_by_id(self, obj_id: str) -> Room | None:
+        print(f'Get obj {obj_id} from mongo')
+        db_objs = await self._db_collection.find_one(MongoDBManager.get_filter(obj_id))
+        return MongoDBManager.map_room(db_objs)
 
-    async def update(self, student_id: str, student: UpdateRoomModel) -> Room | None:
-        db_student = await self._db_collection.find_one_and_replace(MongoDBManager.get_filter(student_id), dict(student))
-        return MongoDBManager.map_room(db_student)
+    async def update(self, obj_id: str, obj: UpdateRoomModel) -> Room | None:
+        db_objs = await self._db_collection.find_one_and_replace(MongoDBManager.get_filter(obj_id), dict(obj))
+        return MongoDBManager.map_room(db_objs)
 
-    async def delete(self, student_id: str) -> Room | None:
-        db_student = await self._db_collection.find_one_and_delete(MongoDBManager.get_filter(student_id))
-        return MongoDBManager.map_room(db_student)
+    async def delete(self, obj_id: str) -> Room | None:
+        db_objs = await self._db_collection.find_one_and_delete(MongoDBManager.get_filter(obj_id))
+        return MongoDBManager.map_room(db_objs)

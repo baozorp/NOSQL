@@ -1,12 +1,10 @@
 from ast import Await
-from typing import Any, List, Sequence, Type
+from typing import Any, List, Sequence
 
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
-from pydantic import BaseModel
 from pymemcache import HashClient
 from starlette.responses import Response
-import asyncio
 from repositories.mongo.mongodb import MongoDBCollection
 from utils.memcached_utils import MemcachedManager
 from repositories.mongo.collections.rooms_collection import MongoRoomCollection
@@ -23,8 +21,8 @@ async def get_all_hosts(repository: MongoRoomCollection = Depends(MongoRoomColle
 
 
 @router.get("/filter")
-async def get_by_name(name: str, repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
-    return await repository.find_by_name(name)
+async def get_by_name(description: str, repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
+    return await repository.find_by_description(description)
 
 
 @router.get("/clear_collection")
@@ -38,24 +36,24 @@ async def drop_collection_by_name(
     return "Succesfully cleared"
 
 
-@router.get("/by_id?id={student_id}", response_model=Room)
-async def get_by_id(student_id: str,
+@router.get("/by_id?id={obj_id}", response_model=Room)
+async def get_by_id(obj_id: str,
                     repository: MongoRoomCollection = Depends(
                         MongoRoomCollection.get_instance),
                     memcached_client: HashClient = Depends(MemcachedManager.get_memcached_client)) -> Any:
-    if not ObjectId.is_valid(student_id):
+    if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    student = memcached_client.get(student_id)
+    obj = memcached_client.get(obj_id)
 
-    if student is not None:
-        return student
-    student = await repository.get_by_id(student_id)
-    if student is None:
+    if obj is not None:
+        return obj
+    obj = await repository.get_by_id(obj_id)
+    if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    memcached_client.add(student_id, student)
+    memcached_client.add(obj_id, obj)
 
-    return student
+    return obj
 
 
 @router.post("/")
@@ -68,30 +66,30 @@ async def add_room(room: UpdateRoomModel,
     return room_id
 
 
-@router.delete("/{student_id}")
-async def remove_student(student_id: str,
-                         repository: MongoRoomCollection = Depends(
-                             MongoRoomCollection.get_instance),
-                         search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Response:
-    if not ObjectId.is_valid(student_id):
+@router.delete("/{obj_id}")
+async def remove_obj(obj_id: str,
+                     repository: MongoRoomCollection = Depends(
+                         MongoRoomCollection.get_instance),
+                     search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Response:
+    if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    student = await repository.delete(student_id)
-    if student is None:
+    obj = await repository.delete(obj_id)
+    if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    await search_repository.delete(student_id)
+    await search_repository.delete(obj_id)
     return Response()
 
 
-@router.put("/{student_id}", response_model=Room)
-async def update_student(student_id: str,
-                         student_model: UpdateRoomModel,
-                         repository: MongoRoomCollection = Depends(
-                             MongoRoomCollection.get_instance),
-                         search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
-    if not ObjectId.is_valid(student_id):
+@router.put("/{obj_id}", response_model=Room)
+async def update_obj(obj_id: str,
+                     obj_model: UpdateRoomModel,
+                     repository: MongoRoomCollection = Depends(
+                         MongoRoomCollection.get_instance),
+                     search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
+    if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    student = await repository.update(student_id, student_model)
-    if student is None:
+    obj = await repository.update(obj_id, obj_model)
+    if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    await search_repository.update(student_id, student_model)
-    return student
+    await search_repository.update(obj_id, obj_model)
+    return obj

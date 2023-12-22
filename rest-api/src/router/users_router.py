@@ -21,9 +21,10 @@ async def get_all_users(repository: MongoDBCollection = Depends(MongoUsersCollec
 @router.get("/clear_collection")
 async def drop_collection_by_name(
         collection_name: str,
-        repository: MongoDBCollection = Depends(
+        repository: MongoUsersCollection = Depends(
             MongoUsersCollection.get_instance),
         search_repository: ElsaticSearch = Depends(ElasticUsersCollection.get_instance)) -> Any:
+    print(collection_name)
     await repository.clear_collection()
     await search_repository.clear_collection(name_of_index=collection_name)
 
@@ -33,6 +34,6 @@ async def add_user(user: User,
                    repository: MongoUsersCollection = Depends(
                        MongoUsersCollection.get_instance),
                    search_repository: ElasticUsersCollection = Depends(ElasticUsersCollection.get_instance)) -> str:
-    room_id = await repository.create(user)
-    await search_repository.create(room_id, user)
-    return 'room_id'
+    user_id = await repository.create(user)
+    await search_repository.create(user_id, user)
+    return user_id
