@@ -44,10 +44,10 @@ async def load_rooms(
 
 @router.get("/load_users")
 async def load_users(
-        rooms_repository: MongoUsersCollection = Depends(
-            MongoRoomCollection.get_instance),
-        rooms_search_repository: ElasticRoomsCollection = Depends(
-            ElasticRoomsCollection.get_instance),
+        rooms_repository: MongoDBCollection = Depends(
+            MongoUsersCollection.get_instance),
+        rooms_search_repository: ElsaticSearch = Depends(
+            ElasticUsersCollection.get_instance),
 ) -> str:
     file_name = os.getenv('USERS_COLLECTION')
     task = DataLoader.load_data(file_name=file_name,

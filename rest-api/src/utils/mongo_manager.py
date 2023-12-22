@@ -19,10 +19,7 @@ class MongoDBManager:
 
     @staticmethod
     async def init_mongo_client(mongo_url: str = str(os.getenv('MONGO_URL')),
-                                mongo_db: str = str(os.getenv('MONGO_DB')),
-                                mongo_collection: str = str(os.getenv(
-                                    'MONGO_COLLECTION'))
-                                ):
+                                mongo_db: str = str(os.getenv('MONGO_DB'))):
         global db_client
         try:
             print(os.getenv('MONGO_URL'))

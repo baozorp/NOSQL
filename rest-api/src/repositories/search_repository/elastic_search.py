@@ -27,9 +27,7 @@ class ElsaticSearch:
         await self._elasticsearch_client.create(index=self._elasticsearch_index, id=student_id, document=dict(student))
 
     async def create_many(self, objects_ids: list[str], objects):
-
         bulk = []
-
         for i in range(len(objects)):
             # Добавляем операцию index для каждого объекта
             index_operation = {

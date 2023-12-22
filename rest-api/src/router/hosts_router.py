@@ -1,11 +1,13 @@
 from ast import Await
-from typing import Any, List
+from typing import Any, List, Sequence, Type
 
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
+from pydantic import BaseModel
 from pymemcache import HashClient
 from starlette.responses import Response
 import asyncio
+from repositories.mongo.mongodb import MongoDBCollection
 from utils.memcached_utils import MemcachedManager
 from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.search_repository.collections.rooms_collection import ElasticRoomsCollection
@@ -15,8 +17,9 @@ router = APIRouter()
 
 
 @router.get("/")
-async def get_all_hosts(repository: MongoRoomCollection = Depends(MongoRoomCollection.get_instance)) -> list[Room]:
-    return await repository.get_all()
+async def get_all_hosts(repository: MongoRoomCollection = Depends(MongoRoomCollection.get_instance)) -> Sequence[Room]:
+    result: Sequence[Room] = [Room.model_validate(user) for user in await repository.get_all(Room)]
+    return result
 
 
 @router.get("/filter")
@@ -27,11 +30,10 @@ async def get_by_name(name: str, repository: ElasticRoomsCollection = Depends(El
 @router.get("/clear_collection")
 async def drop_collection_by_name(
         collection_name: str,
-        repository: MongoRoomCollection = Depends(
+        repository: MongoDBCollection = Depends(
             MongoRoomCollection.get_instance),
         search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
-    print(collection_name)
-    await repository.drop_collection()
+    await repository.clear_collection()
     await search_repository.clear_collection(name_of_index=collection_name)
     return "Succesfully cleared"
 

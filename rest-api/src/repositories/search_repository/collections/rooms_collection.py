@@ -13,3 +13,7 @@ class ElasticRoomsCollection(ElsaticSearch):
     def get_instance(elasticsearch_client: AsyncElasticsearch = Depends(ElsaticSearchManager.get_elasticsearch_client)):
         elasticsearch_index: str = str(os.getenv('ROOMS_COLLECTION'))
         return ElasticRoomsCollection(elasticsearch_index, elasticsearch_client)
+
+    async def find_by_description(self, name: str):
+        print(name)
+        return 1
