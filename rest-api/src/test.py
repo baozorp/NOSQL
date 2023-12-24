@@ -27,10 +27,9 @@ def get_room_by_location(str):
         f'http://127.0.0.1:8005/api/rooms/filter_by_location?host_location={str}').json()
 
 
-def get_by_id():
-    id = '657f29abe26d9569cb709e37'
+def get_by_id(id: str):
     return requests.get(
-        f'http://127.0.0.1:8005/api/rooms/by_id/{id}').json()
+        f'http://127.0.0.1:8005/api/rooms/find_by_id?id={id}').json()
 
 
 def get_all_rooms():
@@ -85,10 +84,10 @@ def set_data():
     print(set_users())
 
 
-clear_data()
-print(set_all())
-
-# print(len(get_all_rooms()))
+# clear_data()
+# print(set_all())
+# print(get_by_id(get_all_rooms()[0]['id']))
+print(len(get_all_rooms()))
 # print(len(get_all_users()))
 # print(len(get_all_reservations()))
 # print(len(find_by_date()))
@@ -109,7 +108,7 @@ print(set_all())
 # ))
 
 
-# a = find_by_date(current_date=20000000, in_date=20000000, out_date=20290000)
+# a = find_by_date(current_date=24000000, in_date=25000000, out_date=20290000)
 # print(len(a))
 # print(len(a))
 # count = 0

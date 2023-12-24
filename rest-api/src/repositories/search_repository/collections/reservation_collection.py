@@ -68,7 +68,6 @@ class ElasticReservationsCollection(ElasticSearch):
         result_set: Set[ObjectId] = set()
         scroll_id = response['_scroll_id']
         value = response['hits']['total']['value']
-        print(value)
         chunks = int(value/10) + 1
 
         for _ in range(chunks):

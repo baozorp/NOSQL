@@ -1,10 +1,9 @@
 from typing import Any, Coroutine, Mapping, Sequence
-from fastapi import Depends
 import json
 from pydantic import BaseModel
-from models.room import Room, UpdateRoomModel
+from models.room import Room, RoomUpdate
 from models.users import User, UserUpdate
-from models.reservation import UpdateReservation
+from models.reservation import ReservationUpdate
 from repositories.mongo.mongodb import MongoDBCollection
 from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.mongo.collections.users_collection import MongoUsersCollection
@@ -23,7 +22,7 @@ class DataLoader:
         model: type[BaseModel]
         match file_name:
             case "rooms":
-                model = UpdateRoomModel
+                model = RoomUpdate
             case "users":
                 model = UserUpdate
             case _:
@@ -74,10 +73,8 @@ class DataLoader:
 
             data.append(entry)
         objs: Sequence[BaseModel] = [
-            UpdateReservation.model_validate(i) for i in data]
+            ReservationUpdate.model_validate(i) for i in data]
         reserv_id = await reservations_mongo.create_many(objs)
 
         print("Reservation information loaded into mongo")
         asyncio.create_task(reservations_elastic.create_many(reserv_id, data))
-        # print("Info generated, but loading")
-        # return data

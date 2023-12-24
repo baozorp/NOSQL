@@ -13,6 +13,6 @@ app.include_router(users_router, tags=["Names"], prefix="/api/users")
 app.include_router(data_loader_routers, tags=[
                    "DataLoader"], prefix="/api/data_loader")
 app.include_router(reservations_router, tags=[
-                   "DataLoader"], prefix="/api/reservations")
+                   "Reservations"], prefix="/api/reservations")
 app.add_event_handler("startup", startup)
 app.add_event_handler("shutdown", shutdown)

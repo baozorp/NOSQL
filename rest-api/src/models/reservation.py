@@ -10,7 +10,7 @@ class Reservation(BaseModel):
     isPaid: bool
 
 
-class UpdateReservation(BaseModel):
+class ReservationUpdate(BaseModel):
     user_id: str
     room_id: str
     in_date: int

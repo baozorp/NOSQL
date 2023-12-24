@@ -12,7 +12,7 @@ class Room(BaseModel):
     picture_url: str
 
 
-class UpdateRoomModel(BaseModel):
+class RoomUpdate(BaseModel):
     host_location: str
     room_type: str
     description: str

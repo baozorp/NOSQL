@@ -8,7 +8,7 @@ from utils.memcached_utils import MemcachedManager
 from repositories.mongo.collections.rooms_collection import MongoRoomCollection
 from repositories.search_repository.collections.rooms_collection import ElasticRoomsCollection
 from repositories.search_repository.elastic_search import ElasticSearch
-from models.room import Room, UpdateRoomModel
+from models.room import Room, RoomUpdate
 
 router = APIRouter()
 
@@ -39,32 +39,25 @@ async def drop_collection_by_name(
     return "Succesfully cleared"
 
 
-@router.get("/by_id?id={obj_id}", response_model=Room)
-async def get_by_id(obj_id: str,
+@router.get("/find_by_id", response_model=Room)
+async def get_by_id(id: str,
                     repository: MongoRoomCollection = Depends(
-                        MongoRoomCollection.get_instance),
-                    memcached_client: HashClient = Depends(MemcachedManager.get_memcached_client)) -> Any:
-    if not ObjectId.is_valid(obj_id):
+                        MongoRoomCollection.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    obj = memcached_client.get(obj_id)
-    if obj is not None:
-        return obj
-    obj = await repository.get_by_id(obj_id)
+    obj = await repository.get_by_id(RoomUpdate, id)
     if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-
-    memcached_client.add(obj_id, obj)
-
     return obj
 
 
-@router.post("/")
-async def add_room(room: UpdateRoomModel,
-                   repository: MongoRoomCollection = Depends(
+@router.put("/")
+async def add_room(room: RoomUpdate,
+                   repository: MongoDBCollection = Depends(
                        MongoRoomCollection.get_instance),
-                   search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> str:
+                   search_repository: ElasticSearch = Depends(ElasticRoomsCollection.get_instance)) -> str:
     room_id = await repository.create(room)
-    await search_repository.create(room_id, UpdateRoomModel.model_dump(room))
+    await search_repository.create(room_id, RoomUpdate.model_dump(room))
     return room_id
 
 
@@ -72,10 +65,10 @@ async def add_room(room: UpdateRoomModel,
 async def remove_obj(obj_id: str,
                      repository: MongoRoomCollection = Depends(
                          MongoRoomCollection.get_instance),
-                     search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Response:
+                     search_repository: ElasticSearch = Depends(ElasticRoomsCollection.get_instance)) -> Response:
     if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    obj = await repository.delete(obj_id)
+    obj = await repository.delete(obj_id, Room)
     if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_repository.delete(obj_id)
@@ -84,14 +77,14 @@ async def remove_obj(obj_id: str,
 
 @router.put("/{obj_id}", response_model=Room)
 async def update_obj(obj_id: str,
-                     obj_model: UpdateRoomModel,
-                     repository: MongoRoomCollection = Depends(
+                     obj_update_model: RoomUpdate,
+                     repository: MongoDBCollection = Depends(
                          MongoRoomCollection.get_instance),
-                     search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> Any:
+                     search_repository: ElasticSearch = Depends(ElasticRoomsCollection.get_instance)) -> Any:
     if not ObjectId.is_valid(obj_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    obj = await repository.update(obj_id, obj_model)
+    obj = await repository.update(obj_update_model, Room, obj_id)
     if obj is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    await search_repository.update(obj_id, obj_model)
+    await search_repository.update(obj_id, obj_update_model)
     return obj

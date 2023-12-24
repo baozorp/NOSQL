@@ -1,6 +1,5 @@
 import os
 from typing import Any
-from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from models.room import Room
 
@@ -33,10 +32,6 @@ class MongoDBManager:
     def close_connection():
         global db_client
         db_client.close() if db_client else None
-
-    @staticmethod
-    def get_filter(id: str) -> dict:
-        return {'_id': ObjectId(id)}
 
     @staticmethod
     def map_room(room_data: Any) -> Room | None:

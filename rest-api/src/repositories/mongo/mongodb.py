@@ -1,13 +1,12 @@
+from ast import mod
+from sre_constants import ANY
 from bson import ObjectId
 from elasticsearch_dsl import Object
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
-from typing import Iterable, Sequence, Set
+from typing import Any, Mapping, Sequence
 
 from pydantic import BaseModel
-
-from utils.mongo_manager import MongoDBManager
-from models.room import Room, UpdateRoomModel
 
 
 class MongoDBCollection:
@@ -29,8 +28,8 @@ class MongoDBCollection:
             return "Unsuccess"
         return "Success"
 
-    async def create(self, obj) -> str:
-        insert_result = await self._db_collection.insert_one(dict(obj))
+    async def create(self, obj: BaseModel) -> str:
+        insert_result = await self._db_collection.insert_one(obj.model_dump())
         return str(insert_result.inserted_id)
 
     async def create_many(self, objs: Sequence[BaseModel]) -> list[str]:
@@ -53,15 +52,23 @@ class MongoDBCollection:
             db_objs.append(baseModel.model_validate(obj))
         return db_objs
 
-    async def get_by_id(self, obj_id: str) -> Room | None:
-        print(f'Get obj {obj_id} from mongo')
-        db_objs = await self._db_collection.find_one(MongoDBManager.get_filter(obj_id))
-        return MongoDBManager.map_room(db_objs)
+    async def get_by_id(self, model: type[BaseModel], obj_id: str) -> BaseModel | None:
+        db_obj: Mapping[str, Any] | None = await self._db_collection.find_one({'_id': ObjectId(obj_id)})
+        if db_obj:
+            validate_object = model.model_validate(db_obj)
+            return validate_object
+        return None
 
-    async def update(self, obj_id: str, obj: UpdateRoomModel) -> Room | None:
-        db_objs = await self._db_collection.find_one_and_replace(MongoDBManager.get_filter(obj_id), dict(obj))
-        return MongoDBManager.map_room(db_objs)
+    async def update(self, updateModel: BaseModel, model: type[BaseModel], obj_id: str) -> BaseModel | None:
+        db_obj: Mapping[str, Any] = await self._db_collection.find_one_and_replace({'_id': ObjectId(obj_id)}, updateModel.model_dump())
+        if db_obj:
+            validate_object = model.model_validate(db_obj)
+            return validate_object
+        return None
 
-    async def delete(self, obj_id: str) -> Room | None:
-        db_objs = await self._db_collection.find_one_and_delete(MongoDBManager.get_filter(obj_id))
-        return MongoDBManager.map_room(db_objs)
+    async def delete(self, obj_id: str, model: type[BaseModel]) -> BaseModel | None:
+        db_obj = await self._db_collection.find_one_and_delete({'_id': ObjectId(obj_id)})
+        if db_obj:
+            validate_object = model.model_validate(db_obj)
+            return validate_object
+        return None
