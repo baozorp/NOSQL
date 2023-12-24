@@ -1,5 +1,4 @@
-import imp
-from typing import Any, Coroutine, List, Sequence
+from typing import Any, Coroutine, Mapping, Sequence
 from fastapi import Depends
 import json
 from pydantic import BaseModel
@@ -31,6 +30,7 @@ class DataLoader:
                 raise ValueError("File is not exist")
         with open(f'data_loading/{file_name}.json', 'r') as rooms_json:
             objs = json.load(rooms_json)
+
         roomsModels: Sequence[BaseModel] = [
             model.model_validate(obj) for obj in objs]
         rooms_ids = await mongodb.create_many(roomsModels)
@@ -48,17 +48,15 @@ class DataLoader:
         await asyncio.gather(*tasks)
         rooms = await room_repository.get_all(Room)
         users = await user_repository.get_all(User)
-
         print("Reservations generation started")
         room_list = [i.model_dump()['id']for i in rooms]
         user_list = [i.model_dump()['id']for i in users]
         start_date = datetime(2000, 1, 1)
         end_date = datetime(2020, 12, 31)
-        data: Sequence[UpdateReservation] = []
-
-        for _ in range(40000):
+        data: Sequence[Mapping[str, Any]] = []
+        for i in range(len(room_list)):
             user_id = random.choice(user_list)
-            room_id = random.choice(room_list)
+            room_id = room_list[i]
             in_date = (
                 start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))
             out_date = (
@@ -66,17 +64,20 @@ class DataLoader:
             in_date = in_date.strftime('%Y%m%d')
             is_paid = random.choice([True])
 
-            entry = UpdateReservation.model_validate({
+            entry = {
                 'user_id': user_id,
                 'room_id': room_id,
-                'in_date': in_date,
-                'out_date': out_date,
+                'in_date': int(in_date),
+                'out_date': int(out_date),
                 'isPaid': is_paid
-            })
+            }
 
             data.append(entry)
-        reserv_id: Sequence[str] = await reservations_mongo.create_many(data)
-        print("Инфа в монгодб загружена")
+        objs: Sequence[BaseModel] = [
+            UpdateReservation.model_validate(i) for i in data]
+        reserv_id = await reservations_mongo.create_many(objs)
+
+        print("Reservation information loaded into mongo")
         asyncio.create_task(reservations_elastic.create_many(reserv_id, data))
-        print("Info generated, but loading")
-        return data
+        # print("Info generated, but loading")
+        # return data

@@ -1,6 +1,8 @@
+from bson import ObjectId
+from elasticsearch_dsl import Object
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
-from typing import List, Sequence, Type
+from typing import Iterable, Sequence, Set
 
 from pydantic import BaseModel
 
@@ -32,13 +34,20 @@ class MongoDBCollection:
         return str(insert_result.inserted_id)
 
     async def create_many(self, objs: Sequence[BaseModel]) -> list[str]:
-        rooms_dict = [dict(obj) for obj in objs]
-        insert_result = await self._db_collection.insert_many(rooms_dict)
+        objs_dict = [dict(obj) for obj in objs]
+        insert_result = await self._db_collection.insert_many(objs_dict)
         mapped_to_str_ids = list(map(str, insert_result.inserted_ids))
         return mapped_to_str_ids
 
-    async def get_all(self, baseModel: Type[BaseModel]) -> Sequence[BaseModel]:
-        db_objs: Sequence = []
+    async def excepting_searh(self, baseModel: type[BaseModel], ids: Sequence[ObjectId]) -> Sequence[BaseModel]:
+        db_objs: Sequence[baseModel] = []
+        async for obj in self._db_collection.find({"_id": {"$nin": ids}}):
+            obj['id'] = str(obj['_id'])
+            db_objs.append(baseModel.model_validate(obj))
+        return db_objs
+
+    async def get_all(self, baseModel: type[BaseModel]) -> Sequence[BaseModel]:
+        db_objs: Sequence[BaseModel] = []
         async for obj in self._db_collection.find():
             obj['id'] = str(obj['_id'])
             db_objs.append(baseModel.model_validate(obj))

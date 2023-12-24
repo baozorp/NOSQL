@@ -58,7 +58,6 @@ services:
     ports:
       - 27017:27017
 
-
   mongo_db_node_02:
     image: mongo:7.0.2
     container_name: mongo_db_node_02
@@ -78,7 +77,7 @@ services:
     command: mongod --replSet docker-replicaset
     ports:
       - 27019:27017
-        
+
   mongo_cluster_init:
     image: mongo:7.0.2
     depends_on:
@@ -89,8 +88,15 @@ services:
       mongo_db_node_03:
         condition: service_healthy
     volumes:
-      - ./infrastructure/production/init-mongo.js:/scripts/init-mongo.js
-    entrypoint: [ "mongosh", "--host", "mongo_db_node_01", "--file", "/scripts/init-mongo.js"]
+      - ./infrastructure/local/init-mongo.js:/scripts/init-mongo.js
+    entrypoint:
+      [
+        "mongosh",
+        "--host",
+        "mongo_db_node_01",
+        "--file",
+        "/scripts/init-mongo.js"
+      ]
 
   elasticsearch_node_01:
     image: elasticsearch:8.10.2
@@ -109,8 +115,8 @@ services:
     image: elasticsearch:8.10.2
     <<: [ *elasticsearch-healthcheck ]
     environment:
-     - node.name=elasticsearch_node_02
-     - discovery.seed_hosts=elasticsearch_node_01,elasticsearch_node_03
+      - node.name=elasticsearch_node_02
+      - discovery.seed_hosts=elasticsearch_node_01,elasticsearch_node_03
     env_file:
       - infrastructure/production/elasticsearch.env
     volumes:
@@ -122,8 +128,8 @@ services:
     image: elasticsearch:8.10.2
     <<: [ *elasticsearch-healthcheck ]
     environment:
-     - node.name=elasticsearch_node_03
-     - discovery.seed_hosts=elasticsearch_node_01,elasticsearch_node_02
+      - node.name=elasticsearch_node_03
+      - discovery.seed_hosts=elasticsearch_node_01,elasticsearch_node_02
     env_file:
       - infrastructure/production/elasticsearch.env
     volumes:
@@ -148,7 +154,6 @@ services:
     <<: [ *memcached-healthcheck ]
     ports:
       - 11213:11211
-
   # nginx:
   #   build: ui
   #   ports:

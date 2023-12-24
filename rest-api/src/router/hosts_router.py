@@ -64,7 +64,7 @@ async def add_room(room: UpdateRoomModel,
                        MongoRoomCollection.get_instance),
                    search_repository: ElasticRoomsCollection = Depends(ElasticRoomsCollection.get_instance)) -> str:
     room_id = await repository.create(room)
-    await search_repository.create(room_id, room)
+    await search_repository.create(room_id, UpdateRoomModel.model_dump(room))
     return room_id
 
 

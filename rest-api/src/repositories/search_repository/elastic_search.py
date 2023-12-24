@@ -1,3 +1,4 @@
+from typing import Any, Mapping, Sequence
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from pydantic import BaseModel
@@ -21,11 +22,10 @@ class ElasticSearch:
         else:
             return "Success"
 
-    async def create(self, obj_id: str, obj: BaseModel):
-        await self._elasticsearch_client.create(index=self._elasticsearch_index, id=obj_id, document=dict(obj))
+    async def create(self, obj_id: str, obj: Mapping[str, Any]):
+        await self._elasticsearch_client.create(index=self._elasticsearch_index, id=obj_id, document=obj)
 
-    async def create_many(self, objects_ids: list[str], objects):
-        print(self._elasticsearch_index)
+    async def create_many(self, objects_ids: list[str], objects: Sequence[Mapping[str, Any]]):
         bulk = []
         for i in range(len(objects)):
             index_operation = {
@@ -37,9 +37,9 @@ class ElasticSearch:
         chunks = [bulk[i:i + chunk_size]
                   for i in range(0, len(bulk), chunk_size)]
         for i in range(len(chunks)):
-            await self._elasticsearch_client.bulk(operations=chunks[i], timeout="60s")
-        #     print(f"Chunk {i} of added")
-        # print("Added to elastic")
+            await self._elasticsearch_client.bulk(operations=chunks[i])
+            print(f"Chunk {i} of added")
+        print("Added to elastic")
 
     async def update(self, obj_id: str, obj):
         await self._elasticsearch_client.update(index=self._elasticsearch_index, id=obj_id, doc=dict(obj))
